@@ -36,7 +36,7 @@ public class TankDrive extends CommandBase {
 
     double rightPowerRaw = joy.getRawAxis(5);
 
-    dt.tankDrive(leftPowerRaw*-0.2, rightPowerRaw*-0.2);
+    dt.tankDrive(leftPowerRaw*-0.1, rightPowerRaw*0.1);
   }
 
   // Called once the command ends or is interrupted.

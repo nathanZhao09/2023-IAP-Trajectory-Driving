@@ -15,6 +15,17 @@
       }
     }
   },
+  "NetworkTables Info": {
+    "Clients": {
+      "open": true
+    },
+    "Connections": {
+      "open": true
+    },
+    "Server": {
+      "open": true
+    }
+  },
   "NetworkTables View": {
     "visible": false
   }
