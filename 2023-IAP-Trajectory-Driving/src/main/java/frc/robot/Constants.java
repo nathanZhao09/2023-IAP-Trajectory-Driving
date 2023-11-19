@@ -51,8 +51,8 @@ public final class Constants {
         public static final double kV = 2.98;
         public static final double kA = 0.2;
 
-        public static final double kVangular = 1.0;
-        public static final double kAangular = 1.0;
+        public static final double kVangular = 3.5;
+        public static final double kAangular = 0.1;
 
         public static final double kPVel = 0.062231;
         // public static final double kPVel = 0.001231;

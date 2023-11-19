@@ -6,8 +6,8 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.motorcontrol.FeedbackDevice; //Lines 9-19 could be importing files for the drive train's code
-import com.ctre.phoenix.motorcontrol.NeutralMode;    //here to
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonSRXSimCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.kauailabs.navx.frc.AHRS;
@@ -18,6 +18,7 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
@@ -28,7 +29,7 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;   //here
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class DriveTrain extends SubsystemBase //createing a class (public)
@@ -63,8 +64,8 @@ public class DriveTrain extends SubsystemBase //createing a class (public)
     leftDriveTalon.setNeutralMode(NeutralMode.Coast); //both set in a neutral mode (not moving)
     rightDriveTalon.setNeutralMode(NeutralMode.Coast);
 
-    leftDriveTalon.setInverted(true); //turing on the inverted for the left drive talon 
-    rightDriveTalon.setInverted(false); //turing off the right driver talon
+    leftDriveTalon.setInverted(false); //turing on the inverted for the left drive talon 
+    rightDriveTalon.setInverted(true); //turing off the right driver talon
 
 
     leftDriveTalon.setSensorPhase(true); //turns on the left sensors 
@@ -164,6 +165,7 @@ VecBuilder.fill(0.001, 0.001, 0.001, 0.1, 0.1, 0.005, 0.005);
 
   /**
    * Returns linear velocity of right side of chassis.
+   * @return 
    * 
    * @return the linear velocity in meters/s (m/s)
    */
@@ -176,18 +178,66 @@ VecBuilder.fill(0.001, 0.001, 0.001, 0.1, 0.1, 0.005, 0.005);
     SmartDashboard.putNumber("Right Ticks", rightDriveTalon.getSelectedSensorPosition());
     SmartDashboard.putNumber("Left Ticks", leftDriveTalon.getSelectedSensorPosition()); //getting ticks (getting funtion)
 
-    SmartDashboard.putNumber("Ticks to Metters", ticksToMeters());
-
+    SmartDashboard.putNumber("Ticks to Meters", ticksToMeters());
+  }
+    /**
+     * Returns the current wheel speeds of the robot.
+     *
+     * @return The current wheel speeds.
+     */
+    public DifferentialDriveWheelSpeeds getWheelSpeeds(){
+      return new DifferentialDriveWheelSpeeds(getLeftSpeed(), getRightSpeed());
+    }
+  
+    /**
+     * Resets the odometry to the specified pose.
+     *
+     * @param pose The pose to which to set the odometry.
+     */
+    public void resetOdometry(Pose2d pose) {
+      resetEncoders();
+      odometry.resetPosition(
+          navx.getRotation2d(), getLeftDistance(), getRightDistance(), pose);
+    }
+  
+    /**
+     * Drives the robot using arcade controls.
+     *
+     * @param fwd the commanded forward movement
+     * @param rot the commanded rotation
+     */
+    public void arcadeDrive(double fwd, double rot) {
+      drive.arcadeDrive(fwd, rot);
+    }
+  
+    /**
+     * Controls the left and right sides of the drive directly with voltages.
+     * Voltage is the native unit of Feedforward with WPILib
+     *
+     * @param leftVolts  the commanded left output
+     * @param rightVolts the commanded right output
+     */
+    public void tankDriveVolts(double leftVolts, double rightVolts) {
+      // drive.setSafetyEnabled(false);
+      simLeftVoltage = leftVolts;
+      simRightVoltage = rightVolts;
+      leftDriveTalon.setVoltage(leftVolts);
+      rightDriveTalon.setVoltage(rightVolts);
+      // WPILib would spit out "Looptime Overrun!" if this isn't included!
+      drive.feed();
+    }
     
 
-    
+  public Pose2d getPose() {
+    return odometry.getPoseMeters();
   }
   @Override
   public void simulationPeriodic(){
     m_driveSim.setInputs(simLeftVoltage, simRightVoltage);
     m_driveSim.update(0.02);
     m_Field2d.setRobotPose(m_driveSim.getPose());
-    SmartDashboard.putData("Feild", m_Field2d);
+    
+    SmartDashboard.putData("Field", m_Field2d);
     int dev = SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[0]");
     SimDouble angle = new SimDouble(SimDeviceDataJNI.getSimValueHandle(dev, "Yaw"));
     angle.set(m_driveSim.getHeading().getDegrees());
@@ -220,7 +270,7 @@ VecBuilder.fill(0.001, 0.001, 0.001, 0.1, 0.1, 0.005, 0.005);
   }
 
 
-  private int velocityToNativeUnits(double velocityMetersPerSecond) {
+  public int velocityToNativeUnits(double velocityMetersPerSecond) {
     // Previous mistake: multiply this by 2
     // Consequences: had to set the constant to 0.5 less
     // Now it works without the 2
@@ -231,7 +281,9 @@ VecBuilder.fill(0.001, 0.001, 0.001, 0.1, 0.1, 0.005, 0.005);
     int sensorCountsPer100ms = (int) (motorRotationsPer100ms * 4096.0);
     return sensorCountsPer100ms;
   }
-  
+  public Field2d getField2d() {
+    return m_Field2d;
+    }
   
 }
 

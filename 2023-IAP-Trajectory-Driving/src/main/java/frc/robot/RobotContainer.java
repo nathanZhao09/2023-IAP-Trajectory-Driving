@@ -14,11 +14,13 @@ import frc.robot.commands.TankDrive;
 import frc.robot.subsystems.DriveTrain;
 import pabeles.concurrency.ConcurrencyOps.NewInstance;
 import frc.robot.commands.PidTurnCCW;
+import frc.robot.commands.Ramsete;
 import frc.robot.commands.AutoDrive;
 
 
 public class RobotContainer {
-  DriveTrain dt = new DriveTrain();
+  Ramsete ramsete = new Ramsete();
+  public static DriveTrain dt = new DriveTrain();
   Joystick j = new Joystick(0);
   public RobotContainer() {
     dt.setDefaultCommand(new TankDrive(dt, j));
@@ -32,15 +34,6 @@ public class RobotContainer {
 
 
 public Command getAutonomousCommand() {
-  // An example command will be run in autonomous
-  return new SequentialCommandGroup(
-    new AutoDrive(dt, 1.0),
-    new PidTurnCCW(dt, 90),
-    new AutoDrive(dt, 1.0),
-    new PidTurnCCW(dt, 90),
-    new AutoDrive(dt, 1.0),
-    new PidTurnCCW(dt, 90),
-    new AutoDrive(dt, 1.0)
-  );
+return ramsete;
 }
 }

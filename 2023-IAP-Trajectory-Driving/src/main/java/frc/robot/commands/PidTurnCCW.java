@@ -23,7 +23,7 @@ public class PidTurnCCW extends CommandBase {
     this.setPointAngle = setPointAngle; //sets setPointAngle to setPointAngle
     PID.setTolerance(5.0); //sets the tolerance (range of error)
     addRequirements(dt);
-    if (setPointAngle > 0) {
+    if (setPointAngle >= 0) {
       motorSign = 1;//counterclockwise turn
     }
     else {
@@ -41,7 +41,7 @@ public class PidTurnCCW extends CommandBase {
   public void initialize() {
     dt.resetNavx();
     //sensor that gets the angle
-    dt.tankDrive (0,0);
+    dt.tankDrive (0.5,0.5);
   }
 
 
@@ -58,7 +58,7 @@ public class PidTurnCCW extends CommandBase {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    dt.tankDrive(0.0,0.0);
+    dt.tankDrive(0,0);
     //stops the robot
   }
 
